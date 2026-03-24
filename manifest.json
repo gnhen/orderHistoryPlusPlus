@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "OrderHistory++",
-    "version": "0.2",
+    "version": "0.3",
     "description": "Enhances the Order History page with live commission tracking, actual customer counts, and item filtering.",
     "content_scripts": [
       {
@@ -13,7 +13,10 @@
     "browser_specific_settings": {
       "gecko": {
         "id": "orderhistoryplus@microcenter.local",
-        "strict_min_version": "109.0"
+        "strict_min_version": "109.0",
+        "data_collection_permissions": {
+          "required": ["none"]
+        }
       }
     }
   }
