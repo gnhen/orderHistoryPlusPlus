@@ -9,5 +9,11 @@
         "js": ["content.js"],
         "css": ["styles.css"]
       }
-    ]
+    ],
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "orderhistoryplus@microcenter.local",
+        "strict_min_version": "109.0"
+      }
+    }
   }
