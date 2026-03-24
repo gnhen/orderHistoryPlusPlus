@@ -1,0 +1,84 @@
+#oh-commission-calc {
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 20px;
+    background: #fff;
+    border: 1px solid #ccc;
+    font-size: 12px;
+    width: 350px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+#oh-commission-calc table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#oh-commission-calc th {
+    background-color: #222;
+    color: #fff;
+    padding: 6px;
+    text-align: left;
+    font-weight: bold;
+}
+
+#oh-commission-calc td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #eee;
+}
+
+#oh-commission-calc input[type="number"] {
+    width: 70px;
+    padding: 2px;
+    border: 1px solid #ccc;
+}
+
+.oh-row-red { background-color: #fcd5d4; }
+.oh-row-purple { background-color: #e6d4fc; }
+.oh-row-green { background-color: #d4fcd5; }
+.oh-row-blue { background-color: #d4e6fc; }
+.oh-row-yellow { background-color: #fcfad4; }
+.oh-row-orange { background-color: #fce4d4; }
+.oh-row-darkblue { background-color: #0033a0; color: white; font-weight: bold; }
+
+.oh-hidden {
+    display: none !important;
+}
+
+#oh-header-mode-btn {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#oh-header-mode-btn.active {
+    background-color: #dc3545;
+}
+
+body.oh-header-mode-active .transaction-row {
+    cursor: pointer;
+}
+
+body.oh-header-mode-active .transaction-row:hover {
+    background-color: #ffcccc !important;
+    outline: 2px solid red;
+}
+
+.transaction-row.oh-removed-item {
+    opacity: 0.3;
+    text-decoration: line-through;
+    background-color: #f8f9fa !important;
+}
+
+#oh-actual-customers {
+    display: block;
+    color: #007bff;
+    font-weight: bold;
+    margin-top: 4px;
+}

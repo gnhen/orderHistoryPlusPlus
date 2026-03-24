@@ -1,0 +1,13 @@
+{
+    "manifest_version": 3,
+    "name": "OrderHistory++",
+    "version": "1.0",
+    "description": "Enhances the Order History page with live commission tracking, actual customer counts, and item filtering.",
+    "content_scripts": [
+      {
+        "matches": ["*://orderhistory.microcenter.com/*"],
+        "js": ["content.js"],
+        "css": ["styles.css"]
+      }
+    ]
+  }
