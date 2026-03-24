@@ -8,7 +8,7 @@
             injectCommissionCalculator();
             attachTransactionRowListeners();
             calculateAll();
-        }, 1000);
+        }, 1000); 
     }
 
     function injectHeaderItemsButton() {
@@ -59,7 +59,7 @@
             const calcWrapper = document.createElement('div');
             calcWrapper.id = 'oh-commission-calc';
             
-            calcWrapper.innerHTML = `
+            const tableTemplate = `
                 <table>
                     <thead>
                         <tr><th colspan="2">Commission Calculator (Scripts.js)</th></tr>
@@ -121,12 +121,20 @@
                 </table>
             `;
 
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(tableTemplate, 'text/html');
+            
+            while (doc.body.firstChild) {
+                calcWrapper.appendChild(doc.body.firstChild);
+            }
+
             rightTable.parentNode.insertBefore(calcWrapper, rightTable);
 
             const inputs = calcWrapper.querySelectorAll('input');
             inputs.forEach(input => input.addEventListener('input', calculateAll));
         }
     }
+
 
     function attachTransactionRowListeners() {
         const rows = document.querySelectorAll('tr');
@@ -138,7 +146,7 @@
                     if (headerModeActive) {
                         e.preventDefault();
                         row.classList.toggle('oh-removed-item');
-                        calculateAll();
+                        calculateAll(); 
                     }
                 });
             }
@@ -170,7 +178,7 @@
 
         const actualCustEl = document.getElementById('oh-actual-customers');
         if (actualCustEl) {
-            actualCustEl.innerHTML = `Actual Customers: ${actualCustomersCount}`;
+            actualCustEl.textContent = `Actual Customers: ${actualCustomersCount}`;
         }
 
         const commissionRate = parseFloat(document.getElementById('oh-comm-rate')?.value) || 0;
