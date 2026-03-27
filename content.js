@@ -194,6 +194,10 @@
         let activeText = "";
         let visibleRevenue = 0;
         let tieredCommissionTotal = 0;
+        
+        // New variables to auto-calculate Service Plans
+        let calcSpRevenue = 0;
+        let calcSpQty = 0;
 
         const rows = document.querySelectorAll('.transaction-row:not(.oh-removed-item)');
         rows.forEach(row => {
@@ -201,30 +205,51 @@
             
             const cells = row.querySelectorAll('td');
             if(cells.length > 0) {
+                // Grab the Description text (Column 5) and Qty (Column 6)
+                let descCellStr = cells[4]?.textContent.toLowerCase() || "";
+                let qtyStr = cells[5]?.textContent.trim() || "0";
+                
                 let totalCellStr = cells[cells.length - 1].textContent.trim();
                 let isNegative = totalCellStr.includes('(') && totalCellStr.includes(')');
                 let numStr = totalCellStr.replace(/[^0-9.]/g, ''); 
                 
                 let totalVal = parseFloat(numStr);
+                let qtyVal = parseFloat(qtyStr);
                 
                 if (!isNaN(totalVal)) {
-                    if (isNegative) totalVal = -totalVal; 
+                    if (isNegative) {
+                        totalVal = -totalVal; 
+                        qtyVal = -qtyVal;
+                    }
                     visibleRevenue += totalVal;
 
-                    let itemCommission = 0;
-                    let absTotal = Math.abs(totalVal);
+                    // AUTO-DETECT: Check if the item is a Service Plan
+                    let isServicePlan = descCellStr.includes('protection plan') || 
+                                        descCellStr.includes('replacement plan') || 
+                                        descCellStr.includes('service plan') || 
+                                        descCellStr.includes('applecare');
 
-                    if (absTotal < 10.00) {
-                        itemCommission = totalVal * 0.12;
-                    } else if (absTotal < 100.00) {
-                        itemCommission = totalVal * 0.06;
-                    } else if (absTotal <= 200.00) {
-                        itemCommission = totalVal * 0.03;
+                    if (isServicePlan) {
+                        // Bucket into Service Plan pool
+                        calcSpRevenue += totalVal;
+                        calcSpQty += qtyVal;
                     } else {
-                        itemCommission = totalVal * 0.02;
-                    }
+                        // Bucket into Standard Tiered pool
+                        let itemCommission = 0;
+                        let absTotal = Math.abs(totalVal);
 
-                    tieredCommissionTotal += itemCommission;
+                        if (absTotal < 10.00) {
+                            itemCommission = totalVal * 0.12;
+                        } else if (absTotal < 100.00) {
+                            itemCommission = totalVal * 0.06;
+                        } else if (absTotal <= 200.00) {
+                            itemCommission = totalVal * 0.03;
+                        } else {
+                            itemCommission = totalVal * 0.02;
+                        }
+
+                        tieredCommissionTotal += itemCommission;
+                    }
                 }
             }
         });
@@ -243,18 +268,29 @@
             custCell.textContent = `${baseText} (${actualCustomersCount})`;
         }
 
+        // Auto-fill the Config inputs so the math runs without user intervention
+        const spRevInput = document.getElementById('oh-sp-revenue');
+        const spQtyInput = document.getElementById('oh-sp-qty');
+        
+        if (spRevInput && document.activeElement !== spRevInput) spRevInput.value = calcSpRevenue.toFixed(2);
+        if (spQtyInput && document.activeElement !== spQtyInput) spQtyInput.value = calcSpQty;
+
+        const finalSpRev = parseFloat(spRevInput?.value) || 0;
+        const finalSpQty = parseFloat(spQtyInput?.value) || 0;
         const hourlyRate = parseFloat(document.getElementById('oh-hourly-rate')?.value) || 0;
         const hoursWorked = parseFloat(document.getElementById('oh-hours-worked')?.value) || 0;
-        const servicePlansRevenue = parseFloat(document.getElementById('oh-sp-revenue')?.value) || 0;
-        const servicePlansAmount = parseFloat(document.getElementById('oh-sp-qty')?.value) || 0;
         const salesCommissionRate = parseFloat(document.getElementById('oh-sp-rate')?.value) || 0;
 
-        const salesCommission = servicePlansRevenue * (salesCommissionRate / 100);
+        const salesCommission = finalSpRev * (salesCommissionRate / 100);
         const hourlyTotal = hourlyRate * hoursWorked;
-        const combined = tieredCommissionTotal + hourlyTotal;
+        
+        // FIX: Combine the Tiered Commission AND the Service Plan Commission into the grand total
+        const totalCommissionPool = tieredCommissionTotal + salesCommission;
+        const combined = totalCommissionPool + hourlyTotal + salesCommission;
+        
         const perHour = hoursWorked > 0 ? (combined / hoursWorked) : 0;
-        const perCustomer = actualCustomersCount > 0 ? (tieredCommissionTotal / actualCustomersCount) : 0;
-        const commissionPerPlan = servicePlansAmount > 0 ? (salesCommission / servicePlansAmount) : 0;
+        const perCustomer = actualCustomersCount > 0 ? (totalCommissionPool / actualCustomersCount) : 0;
+        const commissionPerPlan = finalSpQty > 0 ? (salesCommission / finalSpQty) : 0;
 
         function formatCurrency(val) { 
             let sign = val < 0 ? '-' : '';
@@ -262,9 +298,9 @@
         }
         
         if (document.getElementById('oh-total-comm')) {
-            document.getElementById('oh-total-comm').textContent = formatCurrency(tieredCommissionTotal);
+            document.getElementById('oh-total-comm').textContent = formatCurrency(totalCommissionPool); // Updated reference
             document.getElementById('oh-total-hourly').textContent = formatCurrency(hourlyTotal);
-            document.getElementById('oh-total-combined').textContent = formatCurrency(combined);
+            document.getElementById('oh-total-combined').textContent = formatCurrency(combined); // Updated reference
             document.getElementById('oh-total-per-hour').textContent = formatCurrency(perHour);
             document.getElementById('oh-total-per-customer').textContent = formatCurrency(perCustomer);
             document.getElementById('oh-total-sp-comm').textContent = formatCurrency(salesCommission);
