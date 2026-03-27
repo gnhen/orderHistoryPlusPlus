@@ -1,12 +1,11 @@
 #oh-commission-calc {
     display: inline-block;
     vertical-align: top;
-    margin-right: 20px;
     background: #fff;
-    border: 1px solid #ccc;
+    border: 1px solid #c5c5c5;
     font-size: 12px;
-    width: 350px;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    font-family: 'Open Sans', Arial, sans-serif;
+    width: 300px;
 }
 
 #oh-commission-calc table {
@@ -15,31 +14,48 @@
 }
 
 #oh-commission-calc th {
-    background-color: #222;
+    background-color: #1a1a1a;
     color: #fff;
-    padding: 6px;
+    padding: 6px 8px;
     text-align: left;
     font-weight: bold;
+    border-bottom: 1px solid #c5c5c5;
 }
 
 #oh-commission-calc td {
-    padding: 4px 8px;
+    padding: 3px 8px;
+    height: 25px; /* Forces height to match the original table */
     border-bottom: 1px solid #eee;
 }
 
-#oh-commission-calc input[type="number"] {
-    width: 70px;
-    padding: 2px;
-    border: 1px solid #ccc;
+#oh-commission-calc tfoot td {
+    border-top: 1px solid #c5c5c5;
+    background-color: #f8f9fa; /* Matches the Kendo footer gray */
 }
 
-.oh-row-red { background-color: #fcd5d4; }
-.oh-row-purple { background-color: #e6d4fc; }
-.oh-row-green { background-color: #d4fcd5; }
-.oh-row-blue { background-color: #d4e6fc; }
-.oh-row-yellow { background-color: #fcfad4; }
-.oh-row-orange { background-color: #fce4d4; }
-.oh-row-darkblue { background-color: #0033a0; color: white; font-weight: bold; }
+/* Tightly restrict inputs so they don't stretch the row heights */
+#oh-commission-calc input[type="number"] {
+    width: 65px;
+    padding: 1px 4px;
+    margin: 0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    height: 18px; 
+    font-size: 11px;
+}
+
+/* Exact color mirroring for the right-side table */
+.oh-r-white  { background-color: #ffffff; }
+.oh-r-pink   { background-color: #fcd5d4; }
+.oh-r-purple { background-color: #e6d4fc; }
+.oh-r-green  { background-color: #d4fcd5; }
+.oh-r-blue   { background-color: #d4e6fc; }
+.oh-r-orange { background-color: #fce4d4; }
+.oh-r-olive  { background-color: #c2b59b; }
+.oh-r-yellow { background-color: #fcfad4; }
+.oh-r-dgreen { background-color: #006600; color: #fff; }
+.oh-r-dblue  { background-color: #0033a0; color: #fff; }
+.oh-r-black  { background-color: #111111; color: #fff; }
 
 .oh-hidden {
     display: none !important;
@@ -77,8 +93,9 @@ body.oh-header-mode-active .transaction-row:hover {
 }
 
 #oh-actual-customers {
-    display: block;
-    color: #007bff;
-    font-weight: bold;
-    margin-top: 4px;
+    display: inline;
+}
+
+body.oh-header-mode-active .transaction-row a {
+    pointer-events: none;
 }

@@ -2,13 +2,23 @@
     let headerModeActive = false;
 
     function init() {
+        injectPageSizeOverride();
+
         setTimeout(() => {
             injectHeaderItemsButton();
-            injectActualCustomersDisplay();
             injectCommissionCalculator();
             attachTransactionRowListeners();
             calculateAll();
-        }, 1000); 
+        }, 1500); 
+    }
+
+    function injectPageSizeOverride() {
+        const script = document.createElement('script');
+        script.src = chrome.runtime.getURL('inject.js');
+        script.onload = function() {
+            this.remove(); 
+        };
+        (document.head || document.documentElement).appendChild(script);
     }
 
     function injectHeaderItemsButton() {
@@ -20,6 +30,7 @@
             const targetEl = detailsElements[0];
             const btn = document.createElement('button');
             btn.id = 'oh-header-mode-btn';
+            btn.type = 'button'; // FIX: Stops the button from submitting the form and refreshing the page
             btn.textContent = 'Enable Header Items Mode';
             
             btn.addEventListener('click', () => {
@@ -30,18 +41,6 @@
             });
 
             targetEl.parentNode.insertBefore(btn, targetEl.nextSibling);
-        }
-    }
-
-    function injectActualCustomersDisplay() {
-        const cells = document.querySelectorAll('td, div, span');
-        for (let cell of cells) {
-            if (cell.textContent.includes('Customers Served:')) {
-                const actualCustEl = document.createElement('span');
-                actualCustEl.id = 'oh-actual-customers';
-                cell.appendChild(actualCustEl);
-                break;
-            }
         }
     }
 
@@ -56,85 +55,114 @@
         }
 
         if (rightTable) {
-            const calcWrapper = document.createElement('div');
-            calcWrapper.id = 'oh-commission-calc';
+            const summaryDiv = rightTable.closest('.k-widget.k-grid');
             
-            const tableTemplate = `
-                <table>
-                    <thead>
-                        <tr><th colspan="2">Commission Calculator (Scripts.js)</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr class="oh-row-red">
-                            <td>Comm Rate (%)</td>
-                            <td><input type="number" id="oh-comm-rate" value="1.5"></td>
-                        </tr>
-                        <tr class="oh-row-green">
-                            <td>Hourly Rate ($)</td>
-                            <td><input type="number" id="oh-hourly-rate" value="15.00"></td>
-                        </tr>
-                        <tr class="oh-row-blue">
-                            <td>Hours Worked</td>
-                            <td><input type="number" id="oh-hours-worked" value="8"></td>
-                        </tr>
-                        <tr class="oh-row-yellow">
-                            <td>Service Plan Rev ($)</td>
-                            <td><input type="number" id="oh-sp-revenue" value="0"></td>
-                        </tr>
-                        <tr class="oh-row-orange">
-                            <td>Service Plan Qty</td>
-                            <td><input type="number" id="oh-sp-qty" value="0"></td>
-                        </tr>
-                        <tr class="oh-row-purple">
-                            <td>SP Comm Rate (%)</td>
-                            <td><input type="number" id="oh-sp-rate" value="5"></td>
-                        </tr>
-                        <tr class="oh-row-darkblue">
-                            <td>Total Commission</td>
-                            <td id="oh-total-comm">$0.00</td>
-                        </tr>
-                        <tr>
-                            <td>Total Hourly</td>
-                            <td id="oh-total-hourly">$0.00</td>
-                        </tr>
-                        <tr>
-                            <td>Total Combined</td>
-                            <td id="oh-total-combined" style="font-weight:bold;">$0.00</td>
-                        </tr>
-                        <tr>
-                            <td>Total Per Hour</td>
-                            <td id="oh-total-per-hour">$0.00</td>
-                        </tr>
-                        <tr>
-                            <td>Total Per Customer</td>
-                            <td id="oh-total-per-customer">$0.00</td>
-                        </tr>
-                        <tr>
-                            <td>Total SP Comm</td>
-                            <td id="oh-total-sp-comm">$0.00</td>
-                        </tr>
-                        <tr>
-                            <td>Comm Per Plan</td>
-                            <td id="oh-total-comm-per-plan">$0.00</td>
-                        </tr>
-                    </tbody>
-                </table>
-            `;
+            if (summaryDiv) {
+                const calcWrapper = document.createElement('div');
+                calcWrapper.id = 'oh-commission-calc';
+                
+                const tableTemplate = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th colspan="2" style="position: relative;">
+                                    Commission Calculator 
+                                    <button type="button" id="oh-config-btn" style="position: absolute; right: 8px; top: 4px; font-size: 10px; padding: 2px 6px; cursor: pointer; color: #333; background: #eee; border: 1px solid #ccc; border-radius: 3px;">Config</button>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="oh-r-white oh-config-row" style="display: none;">
+                                <td>Hourly Rate ($)</td>
+                                <td><input type="number" id="oh-hourly-rate" value="4.00"></td>
+                            </tr>
+                            <tr class="oh-r-pink oh-config-row" style="display: none;">
+                                <td>Hours Worked</td>
+                                <td><input type="number" id="oh-hours-worked" value="8"></td>
+                            </tr>
+                            <tr class="oh-r-purple oh-config-row" style="display: none;">
+                                <td>Service Plan Rev ($)</td>
+                                <td><input type="number" id="oh-sp-revenue" value="0"></td>
+                            </tr>
+                            <tr class="oh-r-green oh-config-row" style="display: none;">
+                                <td>Service Plan Qty</td>
+                                <td><input type="number" id="oh-sp-qty" value="0"></td>
+                            </tr>
+                            <tr class="oh-r-blue oh-config-row" style="display: none;">
+                                <td>SP Comm Rate (%)</td>
+                                <td><input type="number" id="oh-sp-rate" value="10"></td>
+                            </tr>
+                            <tr class="oh-r-orange">
+                                <td>Total Commission</td>
+                                <td id="oh-total-comm">$0.00</td>
+                            </tr>
+                            <tr class="oh-r-olive">
+                                <td>Total Hourly</td>
+                                <td id="oh-total-hourly">$0.00</td>
+                            </tr>
+                            <tr class="oh-r-yellow">
+                                <td>Total Combined</td>
+                                <td id="oh-total-combined" style="font-weight:bold;">$0.00</td>
+                            </tr>
+                            <tr class="oh-r-dgreen">
+                                <td>Total Per Hour</td>
+                                <td id="oh-total-per-hour">$0.00</td>
+                            </tr>
+                            <tr class="oh-r-dblue">
+                                <td>Total Per Customer</td>
+                                <td id="oh-total-per-customer">$0.00</td>
+                            </tr>
+                            <tr class="oh-r-black">
+                                <td>Total SP Comm</td>
+                                <td id="oh-total-sp-comm">$0.00</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td>Comm Per Plan</td>
+                                <td id="oh-total-comm-per-plan">$0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                `;
 
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(tableTemplate, 'text/html');
-            
-            while (doc.body.firstChild) {
-                calcWrapper.appendChild(doc.body.firstChild);
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(tableTemplate, 'text/html');
+                
+                while (doc.body.firstChild) {
+                    calcWrapper.appendChild(doc.body.firstChild);
+                }
+
+                // FIX: Establish strict widths so the right table stretches back out
+                const flexContainer = document.createElement('div');
+                flexContainer.style.display = 'flex';
+                flexContainer.style.alignItems = 'flex-start';
+                flexContainer.style.gap = '15px'; 
+                flexContainer.style.width = '100%'; // Take up the whole column
+                
+                calcWrapper.style.flexShrink = '0'; // Don't let the calculator squish
+                summaryDiv.style.flex = '1';        // Force the right table to stretch and fill the rest
+                summaryDiv.style.minWidth = '0';    // Prevent flexbox overflow bugs
+
+                summaryDiv.parentNode.insertBefore(flexContainer, summaryDiv);
+                flexContainer.appendChild(calcWrapper);
+                flexContainer.appendChild(summaryDiv);
+
+                const configBtn = calcWrapper.querySelector('#oh-config-btn');
+                const configRows = calcWrapper.querySelectorAll('.oh-config-row');
+                
+                configBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    configRows.forEach(row => {
+                        row.style.display = row.style.display === 'none' ? '' : 'none';
+                    });
+                });
+
+                const inputs = calcWrapper.querySelectorAll('input');
+                inputs.forEach(input => input.addEventListener('input', calculateAll));
             }
-
-            rightTable.parentNode.insertBefore(calcWrapper, rightTable);
-
-            const inputs = calcWrapper.querySelectorAll('input');
-            inputs.forEach(input => input.addEventListener('input', calculateAll));
         }
     }
-
 
     function attachTransactionRowListeners() {
         const rows = document.querySelectorAll('tr');
@@ -146,6 +174,15 @@
                     if (headerModeActive) {
                         e.preventDefault();
                         row.classList.toggle('oh-removed-item');
+                        
+                        if (row.classList.contains('oh-removed-item')) {
+                            row.style.transition = "background-color 0.2s";
+                            row.style.backgroundColor = "#ffcccc";
+                            setTimeout(() => {
+                                row.style.backgroundColor = ""; 
+                            }, 300);
+                        }
+                        
                         calculateAll(); 
                     }
                 });
@@ -156,6 +193,7 @@
     function calculateAll() {
         let activeText = "";
         let visibleRevenue = 0;
+        let tieredCommissionTotal = 0;
 
         const rows = document.querySelectorAll('.transaction-row:not(.oh-removed-item)');
         rows.forEach(row => {
@@ -163,10 +201,30 @@
             
             const cells = row.querySelectorAll('td');
             if(cells.length > 0) {
-                const totalCellStr = cells[cells.length - 1].textContent.replace('$', '').replace(',', '');
-                const totalVal = parseFloat(totalCellStr);
+                let totalCellStr = cells[cells.length - 1].textContent.trim();
+                let isNegative = totalCellStr.includes('(') && totalCellStr.includes(')');
+                let numStr = totalCellStr.replace(/[^0-9.]/g, ''); 
+                
+                let totalVal = parseFloat(numStr);
+                
                 if (!isNaN(totalVal)) {
+                    if (isNegative) totalVal = -totalVal; 
                     visibleRevenue += totalVal;
+
+                    let itemCommission = 0;
+                    let absTotal = Math.abs(totalVal);
+
+                    if (absTotal < 10.00) {
+                        itemCommission = totalVal * 0.12;
+                    } else if (absTotal < 100.00) {
+                        itemCommission = totalVal * 0.06;
+                    } else if (absTotal <= 200.00) {
+                        itemCommission = totalVal * 0.03;
+                    } else {
+                        itemCommission = totalVal * 0.02;
+                    }
+
+                    tieredCommissionTotal += itemCommission;
                 }
             }
         });
@@ -176,30 +234,35 @@
         const uniqueIDs = [...new Set(matches)];
         const actualCustomersCount = uniqueIDs.length;
 
-        const actualCustEl = document.getElementById('oh-actual-customers');
-        if (actualCustEl) {
-            actualCustEl.textContent = `Actual Customers: ${actualCustomersCount}`;
+        const custCell = Array.from(document.querySelectorAll('td')).find(td => td.textContent.includes('Customers Served:'));
+        if (custCell) {
+            if (!custCell.dataset.originalText) {
+                custCell.dataset.originalText = custCell.textContent.trim(); 
+            }
+            let baseText = custCell.dataset.originalText.replace(/\s*\(\d+\)$/, ''); 
+            custCell.textContent = `${baseText} (${actualCustomersCount})`;
         }
 
-        const commissionRate = parseFloat(document.getElementById('oh-comm-rate')?.value) || 0;
         const hourlyRate = parseFloat(document.getElementById('oh-hourly-rate')?.value) || 0;
         const hoursWorked = parseFloat(document.getElementById('oh-hours-worked')?.value) || 0;
         const servicePlansRevenue = parseFloat(document.getElementById('oh-sp-revenue')?.value) || 0;
         const servicePlansAmount = parseFloat(document.getElementById('oh-sp-qty')?.value) || 0;
         const salesCommissionRate = parseFloat(document.getElementById('oh-sp-rate')?.value) || 0;
 
-        const commission = visibleRevenue * (commissionRate / 100);
         const salesCommission = servicePlansRevenue * (salesCommissionRate / 100);
         const hourlyTotal = hourlyRate * hoursWorked;
-        const combined = commission + hourlyTotal;
+        const combined = tieredCommissionTotal + hourlyTotal;
         const perHour = hoursWorked > 0 ? (combined / hoursWorked) : 0;
-        const perCustomer = actualCustomersCount > 0 ? (commission / actualCustomersCount) : 0;
+        const perCustomer = actualCustomersCount > 0 ? (tieredCommissionTotal / actualCustomersCount) : 0;
         const commissionPerPlan = servicePlansAmount > 0 ? (salesCommission / servicePlansAmount) : 0;
 
-        function formatCurrency(val) { return '$' + val.toFixed(2); }
+        function formatCurrency(val) { 
+            let sign = val < 0 ? '-' : '';
+            return sign + '$' + Math.abs(val).toFixed(2); 
+        }
         
         if (document.getElementById('oh-total-comm')) {
-            document.getElementById('oh-total-comm').textContent = formatCurrency(commission);
+            document.getElementById('oh-total-comm').textContent = formatCurrency(tieredCommissionTotal);
             document.getElementById('oh-total-hourly').textContent = formatCurrency(hourlyTotal);
             document.getElementById('oh-total-combined').textContent = formatCurrency(combined);
             document.getElementById('oh-total-per-hour').textContent = formatCurrency(perHour);
