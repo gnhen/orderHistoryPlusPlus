@@ -1,0 +1,62 @@
+javascript:(function(){
+/* 1. Try to find SKU in the Spec Table first, then fallback to Meta Tags */
+let sku = null;
+
+/* Strategy A: Look for the <div>805390</div> following a <div>SKU</div> */
+const specDivs = Array.from(document.querySelectorAll('.spec-body div'));
+const skuLabelIndex = specDivs.findIndex(el => el.textContent.trim() === 'SKU');
+if (skuLabelIndex !== -1 && specDivs[skuLabelIndex + 1]) {
+sku = specDivs[skuLabelIndex + 1].textContent.trim();
+}
+
+/* Strategy B: Fallback to Meta Tag image URL regex if Strategy A failed */
+if (!sku) {
+const imgUrl = document.querySelector('meta[property="og:image"]')?.content || "";
+const skuMatch = imgUrl.match(/_(d+).jpg$/);
+sku = skuMatch ? skuMatch[1] : null;
+}
+
+if (!sku) {
+alert("SKU not found. Make sure you are on a product or specs page.");
+return;
+}
+
+/* 2. UI Construction */
+const overlay = document.createElement('div');
+overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:1000000;cursor:pointer;font-family:sans-serif;backdrop-filter:blur(3px);";
+
+const modal = document.createElement('div');
+modal.style = "background:#fff;padding:40px;border-radius:15px;position:relative;text-align:center;cursor:default;box-shadow:0 20px 40px rgba(0,0,0,0.6);";
+modal.innerHTML = `
+<div id='qrcode' style='display:inline-block;'></div>
+<h1 style='margin:20px 0 0;color:#000;font-size:28px;letter-spacing:1px;'>${sku}</h1>
+<div style='position:absolute;top:10px;right:15px;font-size:30px;cursor:pointer;color:#ccc;line-height:1;' onclick='this.parentElement.parentElement.remove()'>&times;</div>
+`;
+
+overlay.appendChild(modal);
+document.body.appendChild(overlay);
+
+/* 3. Dismissal logic: click outside to close */
+overlay.onclick = (e) => { if(e.target === overlay) document.body.removeChild(overlay); };
+
+/* 4. Generate QR */
+if (window.QRCode) {
+renderQR(sku);
+} else {
+const script = document.createElement('script');
+script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+script.onload = () => renderQR(sku);
+document.head.appendChild(script);
+}
+
+function renderQR(text) {
+new QRCode(document.getElementById("qrcode"), {
+text: text,
+width: 256,
+height: 256,
+colorDark : "#000000",
+colorLight : "#ffffff",
+correctLevel : QRCode.CorrectLevel.H
+});
+}
+})();
