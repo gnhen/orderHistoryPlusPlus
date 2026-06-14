@@ -209,9 +209,24 @@
     // Just add/remove/change names between the quotes below.
     // ---------------------------------------------------------------------
     const OH_SP_NAMES = [
-        'person1',
-        'person2',
-    ];
+        'aroberts2',
+        'btanke',
+        'cstagnaro',
+        'dfischer',
+        'gspitzig',
+        'ghendricks1',
+        'apatel2',
+        'julloa',
+        'kgibboney',
+        'lnemec',
+        'lcampbell',
+        'marand',
+        'nsaylor',
+        'pholleron',
+        'tfisher',
+        'tblalock',
+        'mjohnson6',
+]
 
     function loadSalespersonNames() {
         return OH_SP_NAMES.slice();
