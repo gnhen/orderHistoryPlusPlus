@@ -236,7 +236,7 @@
 
         const placeholder = document.createElement('option');
         placeholder.value = '';
-        placeholder.textContent = 'Quick pick…';
+        placeholder.textContent = 'Select…';
         select.appendChild(placeholder);
 
         names.forEach(name => {
